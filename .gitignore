@@ -1,0 +1,13 @@
+# Binaries
+odiums_mansion
+*.out
+*.exe
+*.o
+*.d
+*~
+*.swp
+.DS_Store
+*.log
+.vscode/
+.idea/
+cmake-build-*/
