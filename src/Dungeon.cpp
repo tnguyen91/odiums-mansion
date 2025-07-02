@@ -9,10 +9,10 @@ int random(int min, int max) {
     return min + rand() % ((max - min) + 1);
 }
 
-std::pair<int, int> getDungeonCoord() {
+std::pair<int, int> getRandCoord() {
     int r = rand() % DUNGEON_SIZE;
     int c = rand() % DUNGEON_SIZE;
-    return {r, c};
+    return std::make_pair(r, c);
 }
 
 void setUpDungeon(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon) {
@@ -21,16 +21,43 @@ void setUpDungeon(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dung
         for (int j = 0; j < DUNGEON_SIZE; ++j)
             dungeon[i][j] = Tile();
 
+    // Place evil
+    std::pair<int, int> evilCoord;
+    while (true) {
+        evilCoord = getRandCoord();
+        if (isEmptyTile(evilCoord, dungeon)){
+            dungeon[evilCoord.first][evilCoord.second].hasEvil = true;
+            break;
+        }
+    }
+
+    // Add stench around
+    for (int dr = -1; dr <= 1; ++dr) {
+        for (int dc = -1; dc <= 1; ++dc) {
+            if (abs(dr) + abs(dc) == 1) {
+                int nr = evilCoord.first + dr, nc = evilCoord.second + dc;
+                if (nr >= 0 && nr < DUNGEON_SIZE && nc >= 0 && nc < DUNGEON_SIZE) {
+                    dungeon[nr][nc].hasStench = true;
+                }
+            }
+        }
+    }
+
     // Place pits
     for (int i = 0; i < 8; ++i) {
-        auto [r, c] = getDungeonCoord();
-        dungeon[r][c].hasPit = true;
-
+        std::pair<int, int> pitCoord;
+        while (true) {
+            pitCoord = getRandCoord();
+            if (isEmptyTile(pitCoord, dungeon)){
+                dungeon[pitCoord.first][pitCoord.second].hasPit = true;
+                break;
+            }
+        }
         // Add breezes around
         for (int dr = -1; dr <= 1; ++dr) {
             for (int dc = -1; dc <= 1; ++dc) {
                 if (abs(dr) + abs(dc) == 1) {
-                    int nr = r + dr, nc = c + dc;
+                    int nr = pitCoord.first + dr, nc = pitCoord.second + dc;
                     if (nr >= 0 && nr < DUNGEON_SIZE && nc >= 0 && nc < DUNGEON_SIZE) {
                         dungeon[nr][nc].hasBreeze = true;
                     }
@@ -40,22 +67,12 @@ void setUpDungeon(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dung
     }
 
     // Place gold
-    auto [gr, gc] = getDungeonCoord();
-    dungeon[gr][gc].hasGold = true;
-
-    // Place evil
-    auto [er, ec] = getDungeonCoord();
-    dungeon[er][ec].hasEnemy = true;
-
-    // Add stench around
-    for (int dr = -1; dr <= 1; ++dr) {
-        for (int dc = -1; dc <= 1; ++dc) {
-            if (abs(dr) + abs(dc) == 1) {
-                int nr = er + dr, nc = ec + dc;
-                if (nr >= 0 && nr < DUNGEON_SIZE && nc >= 0 && nc < DUNGEON_SIZE) {
-                    dungeon[nr][nc].hasStench = true;
-                }
-            }
+    std::pair<int, int> goldCoord;
+    while (true) {
+        goldCoord = getRandCoord();
+        if (isEmptyTile(goldCoord, dungeon)){
+            dungeon[goldCoord.first][goldCoord.second].hasGold = true;
+            break;
         }
     }
 }
@@ -74,4 +91,13 @@ void printDungeon(const std::array<std::array<char, DUNGEON_SIZE>, DUNGEON_SIZE>
         }
         std::cout << std::endl;
     }
+}
+
+bool isEmptyTile(std::pair<int, int> coord, const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon) {
+    return !(coord.first == 0 && coord.second == 0) &&
+            !dungeon[coord.first][coord.second].hasStench && 
+            !dungeon[coord.first][coord.second].hasBreeze &&
+            !dungeon[coord.first][coord.second].hasPit && 
+            !dungeon[coord.first][coord.second].hasEvil && 
+            !dungeon[coord.first][coord.second].hasGold;
 }
