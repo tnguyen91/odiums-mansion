@@ -12,8 +12,8 @@
 #define STENCH 'S'
 #define BREEZE 'B'
 #define GLIMMER 'G'
-#define EMPTY   '.'
-#define PIT     'P'
-#define EVIL    'E'
+#define EMPTY '.'
+#define PIT 'P'
+#define EVIL 'E'
 
 #endif // CONSTANTS_H
