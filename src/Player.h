@@ -12,9 +12,12 @@ public:
     std::pair<int, int> getCoord() const;
     void move(int dr, int dc);
     bool isValidMove(int dr, int dc) const;
+    void setCarryingGold(bool val);
+    bool isCarryingGold() const;
 
 private:
     std::pair<int, int> coord;
+    bool carryingGold = false;
 };
 
 #endif
