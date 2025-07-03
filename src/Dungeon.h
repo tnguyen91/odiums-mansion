@@ -7,12 +7,13 @@
 #include "GameWindow.h"
 
 struct Tile {
+    bool startingPoint = false;
     bool hasPit = false;
     bool hasGold = false;
     bool hasEvil= false;
     bool hasBreeze = false;
     bool hasStench = false;
-    bool isRevealed = false;
+    bool isRevealed = true;
 };
 
 int random(int, int);

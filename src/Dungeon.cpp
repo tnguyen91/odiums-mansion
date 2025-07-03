@@ -21,6 +21,10 @@ void setUpDungeon(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dung
         for (int j = 0; j < DUNGEON_SIZE; ++j)
             dungeon[i][j] = Tile();
 
+    // Set starting point
+    dungeon[0][0].startingPoint = true;
+    dungeon[0][0].isRevealed = true;
+
     // Place evil
     std::pair<int, int> evilCoord;
     while (true) {
@@ -94,10 +98,12 @@ void printDungeon(const std::array<std::array<char, DUNGEON_SIZE>, DUNGEON_SIZE>
 }
 
 bool isEmptyTile(std::pair<int, int> coord, const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon) {
-    return !(coord.first == 0 && coord.second == 0) &&
+    return  !dungeon[coord.first][coord.second].startingPoint &&
             !dungeon[coord.first][coord.second].hasStench && 
             !dungeon[coord.first][coord.second].hasBreeze &&
             !dungeon[coord.first][coord.second].hasPit && 
             !dungeon[coord.first][coord.second].hasEvil && 
-            !dungeon[coord.first][coord.second].hasGold;
+            !dungeon[coord.first][coord.second].hasGold &&
+            !(coord.first == 1 && coord.second == 0) &&
+            !(coord.first == 0 && coord.second == 1);
 }
