@@ -3,7 +3,16 @@
 #include <iostream>
 #include "Dungeon.h"
 
-GameWindow::GameWindow() : window(sf::VideoMode(640, 640), "Odium's Mansion") {}
+GameWindow::GameWindow() : window(sf::VideoMode(640, 640 + 80), "Odium's Mansion") {
+	if (!font.loadFromFile("assets/CinzelDecorative-Regular.ttf")) {
+		std::cerr << "Failed to load font!\n";
+	}
+
+	statusText.setFont(font);
+    statusText.setCharacterSize(20);
+    statusText.setFillColor(sf::Color::White);
+    statusText.setPosition(10.f, 770.f);
+}
 
 void GameWindow::run(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon) {
     Player player(dungeon);
@@ -25,28 +34,38 @@ void GameWindow::run(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& d
         }
         std::pair<int, int> pos = player.getCoord();
         dungeon[pos.first][pos.second].isRevealed = true;
-        drawGrid(dungeon, pos);
         Tile current = dungeon[pos.first][pos.second];
 
-        if (current.hasPit) {
-            std::cout << "You fell into a pit! Game Over.\n";
+		if (current.hasBreeze && current.hasStench){
+			updateWindow("You feel a breeze and smell a stench...", dungeon, pos);
+		}
+		else if (current.hasBreeze){
+            updateWindow("You feel a breeze...", dungeon, pos);
+		}
+		else if (current.hasStench){
+			updateWindow("You smell a stench...", dungeon, pos);
+		}
+		else if (current.hasPit) {
+            updateWindow("You fell into a pit! Game Over.", dungeon, pos);
             sf::sleep(sf::seconds(2));
-            window.close();
+            //window.close();
         } else if (current.hasEvil) {
-            std::cout << "You encountered evil! Game Over.\n";
+            updateWindow("You encountered an evil creature! Game Over.", dungeon, pos);
             sf::sleep(sf::seconds(2));
-            window.close();
+            //window.close();
         } else if (current.hasGold) {
-            std::cout << "You found the gold! Now return to (0,0) to escape.\n";
+            updateWindow("You found the gold! Return to (0, 0) to escape.", dungeon, pos);
             current.hasGold = false;
             player.setCarryingGold(true);
             dungeon[pos.first][pos.second] = current;
         } else if (player.isCarryingGold() && player.getCoord() == std::make_pair(0, 0)) {
-            std::cout << "You escaped with the gold! You win!\n";
+            updateWindow("You escaped with the gold! You win!", dungeon, pos);
             sf::sleep(sf::seconds(2));
-            window.close();
+            //window.close();
         }
-
+        else {
+            updateWindow("You are in a safe area.", dungeon, pos);
+        }
     }
 }
 
@@ -79,6 +98,24 @@ void GameWindow::drawGrid(const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGE
             window.draw(cell);
         }
     }
+	const float messageHeight = 24.f;
+    sf::RectangleShape messageBar(sf::Vector2f(window.getSize().x, messageHeight));
+    messageBar.setFillColor(sf::Color::Transparent);
+    messageBar.setPosition(0, DUNGEON_SIZE * tileSize);
+    window.draw(messageBar);
+
+    // Status text
+	statusText.setFont(font);
+    statusText.setCharacterSize(18);
+    statusText.setFillColor(sf::Color::White);
+    statusText.setPosition(10.f, DUNGEON_SIZE * tileSize + 4.f);
+    window.draw(statusText);
 
     window.display();
+}
+
+void GameWindow::updateWindow(const std::string& message, const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon, const std::pair<int, int>& pos) {
+	statusMessage = message;
+	statusText.setString(statusMessage);
+    drawGrid(dungeon, pos);
 }

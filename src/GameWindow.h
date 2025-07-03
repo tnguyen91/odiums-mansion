@@ -16,6 +16,10 @@ public:
 
 private:
     sf::RenderWindow window;
+	std::string statusMessage;
+    sf::Font font;
+    sf::Text statusText;
+	void updateWindow(const std::string&, const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon, const std::pair<int, int>& pos);
 };
 
 #endif
