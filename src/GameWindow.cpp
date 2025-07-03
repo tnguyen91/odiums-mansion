@@ -1,12 +1,14 @@
 #include "GameWindow.h"
-#include "Player.h"
 #include <iostream>
-#include "Dungeon.h"
 
 GameWindow::GameWindow() : window(sf::VideoMode(640, 640 + 80), "Odium's Mansion") {
 	if (!font.loadFromFile("assets/CinzelDecorative-Regular.ttf")) {
 		std::cerr << "Failed to load font!\n";
 	}
+
+    if (!iconFont.loadFromFile("assets/FontAwesome6Free-Solid-900.otf")) {
+        std::cerr << "Failed to load emoji font!\n";
+    }
 
 	statusText.setFont(font);
     statusText.setCharacterSize(20);
@@ -16,52 +18,43 @@ GameWindow::GameWindow() : window(sf::VideoMode(640, 640 + 80), "Odium's Mansion
 
 void GameWindow::run(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon) {
     Player player(dungeon);
+    updateWindow("Welcome to Odium's Mansion! \nUse W, A, S, D to move. \nFind the gold and escape!", dungeon, player.getCoord());
     while (window.isOpen()) {
         sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Escape) {
-                    window.close();
-                }
-                switch (event.key.code) {
-                    case sf::Keyboard::W: player.move(-1, 0); break;
-                    case sf::Keyboard::S: player.move(1, 0); break;
-                    case sf::Keyboard::A: player.move(0, -1); break;
-                    case sf::Keyboard::D: player.move(0, 1); break;
-                    default: break;
-                }
-            } 
-        }
+        event = waitForEvent(window);
+        handleInput(event, player);
         std::pair<int, int> pos = player.getCoord();
         dungeon[pos.first][pos.second].isRevealed = true;
         Tile current = dungeon[pos.first][pos.second];
 
-		if (current.hasBreeze && current.hasStench){
-			updateWindow("You feel a breeze and smell a stench...", dungeon, pos);
-		}
-		else if (current.hasBreeze){
-            updateWindow("You feel a breeze...", dungeon, pos);
-		}
-		else if (current.hasStench){
-			updateWindow("You smell a stench...", dungeon, pos);
-		}
-		else if (current.hasPit) {
-            updateWindow("You fell into a pit! Game Over.", dungeon, pos);
-            sf::sleep(sf::seconds(2));
-            //window.close();
-        } else if (current.hasEvil) {
-            updateWindow("You encountered an evil creature! Game Over.", dungeon, pos);
-            sf::sleep(sf::seconds(2));
-            //window.close();
-        } else if (current.hasGold) {
-            updateWindow("You found the gold! Return to (0, 0) to escape.", dungeon, pos);
-            current.hasGold = false;
-            player.setCarryingGold(true);
-            dungeon[pos.first][pos.second] = current;
-        } else if (player.isCarryingGold() && player.getCoord() == std::make_pair(0, 0)) {
+        if (player.isCarryingGold() && player.getCoord() == std::make_pair(0, 0)) {
             updateWindow("You escaped with the gold! You win!", dungeon, pos);
             sf::sleep(sf::seconds(2));
-            //window.close();
+            window.close();
+        }
+        else if (current.hasPit) {
+            updateWindow("You fell into a pit! Game Over.", dungeon, pos);
+            sf::sleep(sf::seconds(2));
+            window.close();
+        }
+        else if (current.hasEvil) {
+            updateWindow("You encountered an evil creature! Game Over.", dungeon, pos);
+            sf::sleep(sf::seconds(2));
+            window.close();
+        }
+        else if (current.hasGold) {
+            updateWindow("You found the gold! \nReturn to the starting point to escape.", dungeon, pos);
+            player.setCarryingGold(true);
+            dungeon[pos.first][pos.second].hasGold = false;
+        }
+        else if (current.hasBreeze && current.hasStench) {
+            updateWindow("You feel a breeze and smell a stench...", dungeon, pos);
+        }
+        else if (current.hasBreeze) {
+            updateWindow("You feel a breeze...", dungeon, pos);
+        }
+        else if (current.hasStench) {
+            updateWindow("You smell a stench...", dungeon, pos);
         }
         else {
             updateWindow("You are in a safe area.", dungeon, pos);
@@ -83,19 +76,67 @@ void GameWindow::drawGrid(const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGE
 
             const Tile& t = dungeon[i][j];
 
-            if (t.isRevealed) {
-                if (i == playerPos.first && j == playerPos.second) 
-                    cell.setFillColor(sf::Color::Green); // Player position
-                else if (t.hasPit) cell.setFillColor(sf::Color::Black);
-                else if (t.hasEvil) cell.setFillColor(sf::Color::Red);
-                else if (t.hasGold) cell.setFillColor(sf::Color::Yellow);
-                else if (t.hasStench) cell.setFillColor(sf::Color(128, 0, 128)); // Purple for stench
-                else if (t.hasBreeze) cell.setFillColor(sf::Color::Cyan);
-                else cell.setFillColor(sf::Color::White);
+			if (t.isRevealed) {
+                cell.setFillColor(sf::Color::White);
             } else {
                 cell.setFillColor(sf::Color(169, 169, 169)); // Dark gray for unrevealed
             }
             window.draw(cell);
+
+			if (t.isRevealed) {
+                sf::Text iconText;
+                iconText.setFont(iconFont);
+                iconText.setCharacterSize(tileSize / 3);
+                iconText.setFillColor(sf::Color::Black);
+
+                auto setIcon = [&](const std::vector<sf::String>& icons, bool topHalf = false) {
+                    std::vector<sf::Text> texts;
+                    float spacing = 4.f;
+                    float totalWidth = 0.f;
+
+                    // Create texts and compute total width
+                    for (const auto& icon : icons) {
+                        iconText.setString(icon);
+                        sf::FloatRect bounds = iconText.getLocalBounds();
+                        sf::Text text(icon, iconFont, iconText.getCharacterSize());
+                        text.setFillColor(iconText.getFillColor());
+                        texts.push_back(text);
+                        totalWidth += bounds.width;
+                    }
+
+                    totalWidth += spacing * (texts.size() - 1);
+
+                    float centerX = j * tileSize + tileSize / 2.f;
+                    float centerY = i * tileSize + (topHalf ? tileSize / 4.f : 3 * tileSize / 4.f);
+                    float startX = centerX - totalWidth / 2.f;
+
+                    // Draw all icons centered
+                    for (auto& text : texts) {
+                        sf::FloatRect bounds = text.getLocalBounds();
+                        text.setOrigin(bounds.left, bounds.top + bounds.height / 2.f); // vertical center
+                        text.setPosition(startX, centerY);
+                        window.draw(text);
+                        startX += bounds.width + spacing;
+                    }
+                };
+
+                if (i == playerPos.first && j == playerPos.second) {
+                    setIcon({L"\uf007"}, true);  // true = top half
+                }
+
+                // Status icons in bottom half
+                std::vector<sf::String> icons;
+                if (t.startingPoint) icons.push_back(L"\uf024");
+                if (t.hasBreeze) icons.push_back(L"\uf72e");
+                if (t.hasStench) icons.push_back(L"\uf071");
+                if (t.hasPit) icons.push_back(L"\ue546");
+                if (t.hasEvil) icons.push_back(L"\uf714");
+                if (t.hasGold) icons.push_back(L"\uf3a5");
+
+                if (!icons.empty()) {
+                    setIcon(icons, false);  // false = bottom half
+                }
+            }
         }
     }
 	const float messageHeight = 24.f;
@@ -118,4 +159,28 @@ void GameWindow::updateWindow(const std::string& message, const std::array<std::
 	statusMessage = message;
 	statusText.setString(statusMessage);
     drawGrid(dungeon, pos);
+}
+
+sf::Event GameWindow::waitForEvent(sf::RenderWindow& window) {
+    sf::Event event;
+    while (true) {
+        if (window.pollEvent(event)) {
+            if (event.type == sf::Event::KeyPressed && event.type == sf::Event::Closed) {
+                window.close();
+            }
+            else if (event.type == sf::Event::KeyPressed) {
+                return event;
+            }
+        }
+    }
+}
+
+void GameWindow::handleInput(sf::Event& event, Player& player) {
+    switch (event.key.code) {
+        case sf::Keyboard::W: player.move(-1, 0); break;
+        case sf::Keyboard::S: player.move(1, 0); break;
+        case sf::Keyboard::A: player.move(0, -1); break; 
+        case sf::Keyboard::D: player.move(0, 1); break;
+        default: break;
+    }
 }
