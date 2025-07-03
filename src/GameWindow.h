@@ -4,28 +4,27 @@
 #include <SFML/Graphics.hpp>
 #include <array>
 #include <utility>
-#include "constants.h"
 #include "Dungeon.h"
 #include "Player.h"
 
 struct Tile;
 
-class GameWindow {
+class GameWindow
+{
 public:
     GameWindow();
-    void run(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon);
-    void drawGrid(const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon, const std::pair<int, int>& playerPos);
+    void run(std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE> &);
+    void drawGrid(const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE> &, const std::pair<int, int> &);
 
 private:
     sf::RenderWindow window;
-	std::string statusMessage;
+    std::string statusMessage;
     sf::Font font;
-	sf::Font iconFont;
+    sf::Font iconFont;
     sf::Text statusText;
-	void updateWindow(const std::string&, const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon, const Player& player);
-    sf::Event waitForEvent(sf::RenderWindow& window);
-    void handleInput(sf::Event& event, Player& player);
-    
+    void updateWindow(const std::string &, const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE> &, const Player &);
+    sf::Event waitForEvent(sf::RenderWindow &);
+    void handleInput(sf::Event &, Player &);
 };
 
 #endif

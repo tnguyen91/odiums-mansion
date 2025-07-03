@@ -1,11 +1,10 @@
-#include <iostream>
 #include <array>
 #include <ctime>
 #include "Dungeon.h"
-#include "../include/constants.h"
 #include "GameWindow.h"
 
-int main() {
+int main()
+{
     srand(static_cast<unsigned int>(time(0)));
 
     std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE> dungeon;

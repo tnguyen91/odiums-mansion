@@ -6,18 +6,21 @@
 #include <array>
 struct Tile;
 
-class Player {
+enum class Direction { Up, Down, Left, Right };
+
+class Player
+{
 public:
-    Player(const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon);
+    Player(const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE> &);
     std::pair<int, int> getCoord() const;
-    void move(int dr, int dc);
-    bool isValidMove(int dr, int dc) const;
-    void setCarryingGold(bool val);
+    bool tryMove(Direction dir);
+    void setCarryingGold(bool);
     bool isCarryingGold() const;
 
 private:
     std::pair<int, int> coord;
-    bool carryingGold = false;
+    bool carryingGold;
+    bool isValidMove(int, int) const;
 };
 
 #endif
