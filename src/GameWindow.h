@@ -22,9 +22,10 @@ private:
     sf::Font font;
 	sf::Font iconFont;
     sf::Text statusText;
-	void updateWindow(const std::string&, const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon, const std::pair<int, int>& pos);
+	void updateWindow(const std::string&, const std::array<std::array<Tile, DUNGEON_SIZE>, DUNGEON_SIZE>& dungeon, const Player& player);
     sf::Event waitForEvent(sf::RenderWindow& window);
     void handleInput(sf::Event& event, Player& player);
+    
 };
 
 #endif

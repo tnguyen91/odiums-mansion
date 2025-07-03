@@ -13,7 +13,7 @@ struct Tile {
     bool hasEvil= false;
     bool hasBreeze = false;
     bool hasStench = false;
-    bool isRevealed = true;
+    bool isRevealed = false;
 };
 
 int random(int, int);
